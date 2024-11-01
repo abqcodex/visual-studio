@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 20px;
+        }
+        #imageContainer img {
+            max-width: 100%;
+            height: auto;
+            margin: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Image Generator</h1>
+    <input type="text" id="promptInput" placeholder="Enter your prompt here..." />
+    <button id="generateBtn">Generate Image</button>
+    <div id="imageContainer"></div>
+
+    <script>
+        const API_TOKEN = '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'; // Your Hugging Face API token
+        const API_URL = 'https://api-inference.huggingface.co/models/CompVis/stable-diffusion-v1-4';
+
+        async function generateImage(prompt) {
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${API_TOKEN}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ inputs: prompt }),
+                });
+
+                // Check for errors
+                if (!response.ok) {
+                    const errorResponse = await response.json();
+                    console.error('Error response:', errorResponse);
+                    throw new Error(`Error: ${response.status}, ${errorResponse.error}`);
+                }
+
+                const data = await response.json();
+                console.log('API Response:', data); // Log the response for debugging
+
+                // Assuming the response contains image data as a URL or a base64 string
+                if (data && Array.isArray(data) && data.length > 0) {
+                    const img = document.createElement('img');
+                    img.src = data[0]; // Adjust this line based on actual response
+                    imageContainer.appendChild(img);
+                } else {
+                    imageContainer.textContent = 'Image generation failed or no image returned.';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                imageContainer.textContent = 'An error occurred while generating the image: ' + error.message;
+            }
+        }
+
+        const generateBtn = document.getElementById('generateBtn');
+        const promptInput = document.getElementById('promptInput');
+        const imageContainer = document.getElementById('imageContainer');
+
+        generateBtn.addEventListener('click', () => {
+            const prompt = promptInput.value;
+
+            // Clear previous images
+            imageContainer.innerHTML = '';
+
+            if (!prompt) {
+                alert('Please enter a prompt to generate an image.');
+                return;
+            }
+
+            generateImage(prompt);
+        });
+    </script>
+</body>
+</html>
